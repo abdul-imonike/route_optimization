@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+<html>
+ <head>
+   <title>Nairobi Map</title>
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css"
+   integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw=="
+   crossorigin=""/>
+   <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"
+   integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA=="
+   crossorigin=""></script>
+   <script src="https://rawgit.com/k4r573n/leaflet-control-osm-geocoder/master/Control.OSMGeocoder.js"></script>
+   <link rel="stylesheet" href="https://rawgit.com/k4r573n/leaflet-control-osm-geocoder/master/Control.OSMGeocoder.css" />
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.5/leaflet-routing-machine.css" />
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.5/leaflet-routing-machine.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+   
+   
+   <style>
+      html, body, #map {
+            height: 100%;
+            width: 100%;
+        }
+             
+	  
+   </style>
+   
+ </head>
+ <body onLoad="javascript:init();">
+   <div id="map"></div>
+   <div id="map">
+      <input type="button" id="btn1" value="Submit" />
+	  <input type="hidden" id="coord1" value="" />
+	  <input type="hidden" id="result" value="" />
+   </div> 
+   <script language="javascript">
+      var map;
+	  var str;
+	  var dc_coords;
+	  var counter = 0;
+	  var coordinates = {};
+	  var customer_orders = {};
+	  var coords;
+      var coords_array;
+	  
+	  var locationIcon = L.icon({
+		   iconUrl:'{{url_for('static', filename='mark.png')}}',
+		   iconSize:[21, 25],
+		   iconAnchor:[20, 24]
+        });
+		
+	  $(document).ready(function() {
+			$("#btn1").click(function(event){
+			   // customer_orders = {};
+			    coords = $("#coord1").val();
+				alert("value of coords: " + coords);
+				coords_array = coords.split("},");
+				alert("length of coords_array: " + coords_array.length);
+				
+				var last_element = (coords_array[coords_array.length-1]).split(":{");
+				
+				alert("last element: " + last_element);
+				
+			    alert("length of last_element: " + last_element.length);
+				alert("last coordinates: " + last_element[1]);
+				
+				alert("last_element[0]: " + last_element[0]);
+				
+			   
+				
+				alert("The number of textboxes: " + last_element[0].slice(1,-1));
+				
+			//	alert("dc_coords: " + dc_coords);
+				
+			//	dc_coords = dc_coords.split(":{");
+				
+			//	alert("dc_coords: " + dc_coords);
+				
+			//	dc_coords = dc_coords[1];
+				
+			//	alert("dc_coords: " + dc_coords);
+				
+			//	dc_coords = dc_coords.slice(0,-2);
+				
+			//	alert("dc_coords: " + dc_coords);
+				
+			//	customer_orders["0"] = "0:" + dc_coords;
+			
+				last_element_id = last_element[0].slice(1,-1);
+				alert("last_element_id: " + last_element_id);
+				
+			//	var customer_order_size = document.getElementById(last_element_id).value;
+			//	alert(customer_order_size);
+				
+			//	if(typeof(customer_order_size) != "undefined") {
+			//		var complete_entry = customer_order_size + ":" + last_element[1];
+					  
+			//		alert("complete_entry: " + complete_entry);
+					  
+			//		customer_orders[last_element_id] = complete_entry;
+			//	}
+
+				
+			//	for(i = 1; i <= parseInt(last_element[0].slice(1,-1)); i++) {
+				 
+			//		var customer_order_size = document.getElementById(i.toString()).value;
+					
+			//		alert("value of i: " + i.toString());
+			//		alert(customer_order_size);
+					
+					
+					
+			//		var current_element = (coords_array[i]).split(":{");
+					
+			//		if(typeof(customer_order_size) != "undefined") {
+			//		    var complete_entry = customer_order_size + ":" + current_element[1];
+					  
+			//		  	alert("complete_entry: " + complete_entry);
+					  
+			//			customer_orders[i.toString()] = complete_entry;
+			//	    }
+					
+					
+					
+				
+			//	}
+				
+				
+				
+				
+				var orders_string = JSON.stringify(customer_orders,null,'\t');
+				
+			//	alert("orders_string: " + orders_string);
+			//	$.get(
+			//	   url="compute",
+			//	   data={'customer_orders':orders_string}
+			//	);
+				
+			
+				
+				$.getJSON("compute", data={'customer_orders':orders_string},function(data) {
+					$("#result").val(data.result);
+				//	var optimize_routes = document.getElementById("result").value;
+					var optimize_routes = data.result;
+				    alert("optimize_routes: " + optimize_routes);
+					
+					var optimize_route_array = optimize_routes.split('x');
+					
+					var cleaned_route = [];
+					var dc = new L.LatLng(-1.28333,36.81667);
+					cleaned_route.push(dc);
+					
+					var cleaned_route_control = new L.Routing.control({});
+						
+					alert("Control object created");
+					
+					for (i = 0; i < optimize_route_array.length; i++) {
+						alert("Route: " + optimize_route_array[i]);
+						
+						var current_route = optimize_route_array[i];
+						
+						if(current_route.indexOf(",") != -1) {
+						
+							
+							
+							var current_route_array = current_route.split(',');
+							
+							alert("current_route_array[0]: " + current_route_array[0]);
+							
+							current_route_array[0] = (current_route_array[0]).slice(1);
+							
+							alert("current_route_array[0]: " + current_route_array[0]);
+							
+							alert("current_route_array[current_route_array.length-1]: " + current_route_array[current_route_array.length-1]);
+							
+							current_route_array[current_route_array.length-1] = (current_route_array[current_route_array.length-1]).slice(0,-1);
+							 
+							alert("current_route_array[current_route_array.length-1]: " + current_route_array[current_route_array.length-1]);
+							
+						} else {
+						
+							alert("beginning of else clause")
+						
+							var current_route_array = []
+							current_route = current_route.slice(1);
+							current_route = current_route.slice(0,-1);
+							current_route_array.push(current_route);
+							
+							alert("end of else clause")
+							
+						}
+						
+						alert("Cleaned Route: " + JSON.stringify(current_route_array));
+						
+						
+						
+						alert("Coordinates: " + JSON.stringify(coordinates));
+						alert("current_route_array.length: " + current_route_array.length);
+						alert("coordinates.length: " + Object.keys(coordinates).length);
+						
+						for (j = 0; j < current_route_array.length; j++) {
+							for (k = 0; k < Object.keys(coordinates).length; k++) {
+								alert("type of current_route_array[j]: " + typeof current_route_array[j]);
+								if ( parseInt(current_route_array[j]) == k ) {
+									alert("Inside cleaned route if clause");
+									cleaned_route.push(coordinates[k]);
+									break;
+								}
+							}
+						}
+						
+						
+						cleaned_route.push(dc);
+						alert("Cleaned Route waypoints: " + JSON.stringify(cleaned_route));
+						
+						
+						
+						
+					}
+					
+					alert("About to set waypoints" + JSON.stringify(cleaned_route));
+					cleaned_route_control.setWaypoints(cleaned_route).addTo(map);
+					
+				});
+			
+			});
+	  });	
+		
+      function init() {
+      	 map = L.map('map');
+      	  
+      	 //add a tile layer to add to our map, in this case it's the 'standard' OpenStreetMap.org tile server
+      	 L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
+            maxZoom: 18
+			
+         }).addTo(map);
+
+         map.attributionControl.setPrefix(''); // Don't show the 'Powered by Leaflet' text. Attribution overload
+        
+		
+		// var nairobi = new L.LatLng(-1.28333,36.81667); // geographical point (longitude and latitude)
+        // map.setView(nairobi, 13);
+		
+		var nairobi = new L.LatLng(-1.28333,36.81667); // geographical point (longitude and latitude)
+		map.setView(nairobi, 13);
+		
+		
+		
+		L.marker([-1.28333,36.81667]).addTo(map)
+			.bindPopup('Distribution<br> Centre')
+			.openPopup();
+			
+		coordinates[counter] = nairobi;
+		dc_coords = JSON.stringify(coordinates);
+		//document.getElementById('coord1').value = str;
+		alert(dc_coords);
+
+		dc_coords = dc_coords.split(":{");
+		alert("dc_coords: " + dc_coords);
+		dc_coords = dc_coords[1];
+		alert("dc_coords: " + dc_coords);
+		dc_coords = dc_coords.slice(0,-2);
+		alert("dc_coords: " + dc_coords);
+		customer_orders["0"] = "0:" + dc_coords;
+		
+		
+		 
+		 var osmGeocoder = new L.Control.OSMGeocoder({placeholder: 'Search location...'});
+         map.doubleClickZoom.disable();
+		 map.on('dblclick', onMapClick);
+		// map.on('click', onMapClick);
+		 map.addControl(osmGeocoder);
+      }
+	  
+	  
+	  
+	  function onMapClick(e) {
+	 
+	   counter++;
+	   
+	 //  var order_box = '<input type="text" id= ' + '"' + counter + '"' + ' onChange="doSubmit(' + this + ');"' + ' size = "5">';
+	 //  var order_box = '<input type="text" id= ' + '"' + counter + '"' + ' size = "5">';
+	 //  var order_box = '<input type="text" id= ' + '"' + counter + '"' + ' onchange="doSubmit(' + "'" + counter + "'" + ')"' + ' size = "5">';
+	     var order_box = '<input type="text" id="o' + counter + '" onchange="doSubmit(' + "'o" + counter + "'" + ')"' + ' size = "5">';
+	   alert(order_box);
+	   
+	   var myIcon = new L.divIcon({
+	     
+		  html:order_box
+	   });
+	   var marker = new L.marker(e.latlng, {icon: myIcon}).addTo(map);
+	   
+	
+	    coordinates[counter] = e.latlng;
+		str = JSON.stringify(coordinates);
+	    alert(str);
+	
+		document.getElementById('coord1').value = str;
+	 
+	
+		
+		
+//		 window.onload=function(){    
+//			var one_order = document.getElementById(counter.toString()).addEventListener("change", function(){
+            
+//			alert("Inside eventlistener");
+//			alert("textbox_id: " + one_order.id);
+//			coords = document.getElementById('coord1').value;
+//			alert("coords: " + coords)
+//			coords_array = coords.split("},");
+//			alert("coords_array: " + coords_array);
+//			var customer_order_size = one_order.value;
+//			alert("customer_order_size: " + customer_order_size);
+//			var current_element = (coords_array[parseInt(id_string)]).split(":{");
+//			alert("current_element: " + current_element);
+		
+//			if(typeof(customer_order_size) != "undefined") {
+//				var complete_entry = customer_order_size + ":" + current_element[1];
+					  
+//				alert("complete_entry: " + complete_entry);
+					  
+//				customer_orders[counter.toString()] = complete_entry;
+//			}
+			
+//        });
+//    };
+	
+	  }
+	  map.doubleClickZoom.enable();
+	  
+	  function shortestPath() {
+	     var value, value1;
+         Object.keys(coordinates).forEach(function(key) {
+            value = coordinates[key];
+			alert("value: " + value);
+			Object.keys(coordinates).forEach(function(key) {
+			   value1 = coordinates[key];
+			   alert("value1: " + value1);
+			   
+			   
+			});
+            
+         });
+	  }
+	  
+	 function doSubmit(id_string) {
+		alert("Inside doSubmit");
+		alert("id_string: " + id_string);
+		alert("type of id_string: " + typeof(id_string));
+		coords = document.getElementById('coord1').value;
+		alert("coords: " + coords)
+		coords_array = coords.split("},");
+		alert("coords_array: " + coords_array);
+		var customer_order_size = document.getElementById(id_string).value;
+		alert("textbox_id: " + document.getElementById(id_string).id);
+		alert("customer_order_size: " + customer_order_size);
+		id_string = id_string.slice(1);
+		var current_element = (coords_array[parseInt(id_string)]).split(":{");
+		alert("current_element: " + current_element);
+		
+		if(typeof(customer_order_size) != "undefined") {
+			var complete_entry = customer_order_size + ":" + current_element[1];
+					  
+			alert("complete_entry: " + complete_entry);
+					  
+			customer_orders[id_string] = complete_entry;
+		}
+		
+	  }
+	  
+//	  function doSubmit(textBox) {
+//		alert("Inside doSubmit");
+//		alert("textBox_id: " + textBox.id);
+//		alert("type of textBox_id: " + typeof(textBox.id));
+//		coords = document.getElementById('coord1').value;
+//		alert("coords: " + coords)
+//		coords_array = coords.split("},");
+//		alert("coords_array: " + coords_array);
+//		var customer_order_size = textBox.value;
+	
+//		alert("customer_order_size: " + customer_order_size);
+//		var current_element = (coords_array[parseInt(textBox_id)]).split(":{");
+//		alert("current_element: " + current_element);
+		
+//		if(typeof(customer_order_size) != "undefined") {
+//			var complete_entry = customer_order_size + ":" + current_element[1];
+					  
+//			alert("complete_entry: " + complete_entry);
+					  
+//			customer_orders[id_string] = complete_entry;
+//		}
+		
+//	  }
+	  
+   </script>   
+ </body>
+ </html>
+ {% endblock %}

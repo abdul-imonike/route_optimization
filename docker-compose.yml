@@ -1,0 +1,31 @@
+version: "3.7"
+services:
+
+  db:
+    image: mysql:5.7
+    ports:
+      - "32000:3306"
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: data_scientist
+    volumes:
+      - ./db/route_client.sql:/docker-entrypoint-initdb.d/route_client.sql:ro
+  #    - ./db:/docker-entrypoint-initdb.d/
+    
+      
+  
+  
+  app:
+
+    build: C:\abdul_files\flask_apps\leaflet\control_search
+    links:
+      - db
+    ports:
+      - "5001:5000"
+    depends_on:
+      - db
+    
+      
+
+    
